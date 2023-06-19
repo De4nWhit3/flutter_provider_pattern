@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_provider_pattern/application/theme_service.dart';
+import 'package:provider/provider.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(ChangeNotifierProvider(
+    create: (context) => ThemeService(),
+    child: const MyApp(),
+  ));
 }
 
 class MyApp extends StatelessWidget {
@@ -10,30 +15,43 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a blue toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
-    );
+    return Consumer<ThemeService>(builder: (context, themeService, child) {
+      return MaterialApp(
+        title: 'Flutter Demo',
+        themeMode: themeService.isDarkModeOn ? ThemeMode.dark : ThemeMode.light,
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      );
+    });
   }
+}
+
+class AppTheme {
+  // private constructor. class will never be instantiated
+  AppTheme._();
+
+  static const _primaryColorLight = Colors.lightBlueAccent;
+  static const _primaryColorDark = Colors.green;
+
+  static final ThemeData lightTheme = ThemeData(
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: _primaryColorLight,
+      brightness: Brightness.light,
+    ),
+    useMaterial3: true,
+  );
+
+  static final ThemeData darkTheme = ThemeData(
+    useMaterial3: true,
+    appBarTheme: const AppBarTheme(
+      centerTitle: false,
+    ),
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: _primaryColorDark,
+      brightness: Brightness.dark,
+    ),
+  );
 }
 
 class MyHomePage extends StatefulWidget {
@@ -116,7 +134,13 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
+        onPressed: () {
+          Provider.of<ThemeService>(context, listen: false).toggleTheme();
+          _incrementCounter();
+          // listen false means that we don't want to listen on the
+          // service, we just want to toggle the theme
+          // here we are doing an action not listening to the state changing
+        },
         tooltip: 'Increment',
         child: const Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
